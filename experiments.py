@@ -2,21 +2,20 @@
 
 import os
 import time
-
 import numpy as np
 from sklearn.preprocessing import normalize as nmlz
 from sklearn.metrics import roc_auc_score, average_precision_score
-
 import pickle
 import argparse
-
 import tensorflow.compat.v1 as tf
 from keras.datasets import fashion_mnist
+from load_OD_datasets import load_od_datasets
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 tf.logging.set_verbosity(tf.logging.FATAL)
 
 from RSRAE.model import CAE
+
 
 #%% Parser
 
@@ -49,6 +48,9 @@ parser.add_argument("-n", "--renormalize",
                     default="1")
 parser.add_argument("-b", "--batchnormalization",
                     default="1")
+parser.add_argument("-OD_ds", "--OD_dataset_name", default='Ecoli4', help='name of the outlier detection dataset')
+parser.add_argument("-d_dir", "--data_dir",type=str, default='/home/hsarvari/PycharmProjects/data/')
+
 args = parser.parse_args()
 
 """Set GPU for use."""
@@ -85,8 +87,14 @@ elif args.true == "20news":
 elif args.true == "reuters":
     with open("../data/reuters.data", 'rb') as f:
         data = pickle.load(f)
+
     X_test_origin = data["X"]
     y_test_origin = data["y"]
+elif args.true == "OD_dataset":
+    X_test_origin, y_test_origin = load_od_datasets(args.OD_dataset_name, args.data_dir)
+    print(X_test_origin)
+    print(y_test_origin)
+
 else:
     raise Exception("Dataset not recognized!")
    
@@ -130,6 +138,8 @@ if __name__ == "__main__":
         inliers_set = list(range(20))
     elif args.true == "reuters":
         inliers_set = list(range(5))
+    elif args.true == "OD_dataset"
+        inliers_set = list(range(0))
 
     for cvalue in (0.1, 0.3, 0.5, 0.7, 0.9):
         
